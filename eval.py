@@ -74,7 +74,7 @@ def evaluate( obj_map, disp_gt, disp ):
     disp = interpolate(disp)
     abs_err = np.abs(disp - disp_gt)
     rel_err = abs_err / disp_gt # division by zero yields infinity
-    wrong_px = (abs_err > abs_error_threshold) | (rel_err > rel_error_threshold)
+    wrong_px = (abs_err > abs_error_threshold) & (rel_err > rel_error_threshold)
     errors['px_bg'] = np.sum( bg_mask )
     errors['err_bg'] = np.sum( bg_mask & wrong_px )
     errors['px_bg_re'] = np.sum( bg_mask & results_mask )
