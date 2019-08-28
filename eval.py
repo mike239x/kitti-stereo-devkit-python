@@ -15,20 +15,20 @@ def pixel_accumulator():
         ])
 
 log_colors = [
-        [  0,      np.array([ 49,  54, 149], dtype = np.uint8) ],
-        [  0.0625, np.array([ 69, 117, 180], dtype = np.uint8) ],
-        [  0.125,  np.array([116, 173, 209], dtype = np.uint8) ],
-        [  0.25,   np.array([171, 217, 233], dtype = np.uint8) ],
-        [  0.5,    np.array([224, 243, 248], dtype = np.uint8) ],
-        [  1,      np.array([254, 224, 144], dtype = np.uint8) ],
-        [  2,      np.array([253, 174,  97], dtype = np.uint8) ],
-        [  4,      np.array([244, 109,  67], dtype = np.uint8) ],
-        [  8,      np.array([215,  48,  39], dtype = np.uint8) ],
-        [ 16,     np.array([165,   0,  38], dtype = np.uint8) ]
+        [ 0,     np.array([ 49,  54, 149], dtype = np.uint8) ],
+        [ 2**-4, np.array([ 69, 117, 180], dtype = np.uint8) ],
+        [ 2**-3, np.array([116, 173, 209], dtype = np.uint8) ],
+        [ 2**-2, np.array([171, 217, 233], dtype = np.uint8) ],
+        [ 2**-1, np.array([224, 243, 248], dtype = np.uint8) ],
+        [ 2** 0, np.array([254, 224, 144], dtype = np.uint8) ],
+        [ 2** 1, np.array([253, 174,  97], dtype = np.uint8) ],
+        [ 2** 2, np.array([244, 109,  67], dtype = np.uint8) ],
+        [ 2** 3, np.array([215,  48,  39], dtype = np.uint8) ],
+        [ 2** 4, np.array([165,   0,  38], dtype = np.uint8) ]
         ]
 
-num_test_images = 200 #200
-num_error_images = 20 #20
+num_test_images = 200
+num_error_images = 20
 abs_error_threshold = 3#px
 rel_error_threshold = 0.05
 
@@ -69,21 +69,22 @@ def run_on (
 def evaluate( obj_map, disp_gt, disp ):
     errors = pixel_accumulator()
     results_mask = disp > 0
-    bg_mask = disp_gt > 0 && obj_map == 0
-    fg_mask = disp_gt > 0 && obj_map > 0
+    bg_mask = disp_gt > 0 & obj_map == 0
+    fg_mask = disp_gt > 0 & obj_map > 0
     disp = interpolate(disp)
     abs_err = np.abs(disp - disp_gt)
     rel_err = abs_err / disp_gt # division by zero yields infinity
-    wrong_px = (abs_err > abs_error_threshold) || (rel_err > rel_error_threshold)
+    wrong_px = (abs_err > abs_error_threshold) | (rel_err > rel_error_threshold)
     errors['px_bg'] = np.sum( bg_mask )
-    errors['err_bg'] = np.sum( bg_mask && wrong_px )
-    errors['px_bg_re'] = np.sum( bg_mask && results_mask )
-    errors['err_bg_re'] = np.sum( bg_mask && results_mask && wrong_px )
+    errors['err_bg'] = np.sum( bg_mask & wrong_px )
+    errors['px_bg_re'] = np.sum( bg_mask & results_mask )
+    errors['err_bg_re'] = np.sum( bg_mask & results_mask & wrong_px )
     errors['px_fg'] = np.sum( fg_mask )
-    errors['err_fg'] = np.sum( fg_mask && wrong_px )
-    errors['px_fg_re'] = np.sum( fg_mask && results_mask )
-    errors['err_fg_re'] = np.sum( fg_mask && results_mask && wrong_px )
+    errors['err_fg'] = np.sum( fg_mask & wrong_px )
+    errors['px_fg_re'] = np.sum( fg_mask & results_mask )
+    errors['err_fg_re'] = np.sum( fg_mask & results_mask & wrong_px )
     err = np.minimum( abs_err / 3.0, rel_err * 20.0 )
+    # ^^^ TODO: why min and not max?
     err_img = np.zeros((*disp.shape, 3), dtype = np.uint8)
     for threshold, color in log_colors:
         err_img[ err > threshold ] = color
